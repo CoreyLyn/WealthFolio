@@ -6,7 +6,12 @@ import { AllocationChart } from './components/AllocationChart';
 import { TrendChart } from './components/TrendChart';
 import { AccountList } from './components/AccountList';
 import { AccountForm } from './components/AccountForm';
-import './App.css';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Download, Plus, RefreshCw, Settings, Trash2 } from 'lucide-react';
+import { ThemeProvider } from "@/components/theme-provider"
+import { ModeToggle } from "@/components/mode-toggle"
 
 type ModalType = 'asset' | 'liability' | null;
 
@@ -31,7 +36,6 @@ function App() {
   const [editingAsset, setEditingAsset] = useState<AssetAccount | null>(null);
   const [editingLiability, setEditingLiability] = useState<LiabilityAccount | null>(null);
   const [showSettings, setShowSettings] = useState(false);
-  const [activeView, setActiveView] = useState<'dashboard' | 'accounts'>('dashboard');
 
   const handleEditAsset = (asset: AssetAccount) => {
     setEditingAsset(asset);
@@ -59,199 +63,195 @@ function App() {
   const assetRatio = totalAssets > 0 ? (totalAssets / (totalAssets + totalLiabilities)) * 100 : 50;
 
   return (
-    <div className="app">
-      <header className="app-header">
-        <div className="header-content">
-          <div className="header-brand">
-            <span className="brand-icon">💎</span>
-            <h1 className="brand-name">WealthFolio</h1>
-          </div>
-          <div className="header-actions">
-            <button 
-              className="btn btn-secondary"
-              onClick={() => setShowSettings(!showSettings)}
-            >
-              ⚙️ 设置
-            </button>
-          </div>
-        </div>
-        
-        {showSettings && (
-          <div className="settings-panel">
-            <div className="settings-content">
-              <button className="btn btn-secondary" onClick={loadDemoData}>
-                📊 加载演示数据
-              </button>
-              <button className="btn btn-secondary" onClick={takeSnapshot}>
-                📸 记录快照
-              </button>
-              <button className="btn btn-danger" onClick={handleClearData}>
-                🗑️ 清除所有数据
-              </button>
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+      <div className="min-h-screen bg-background">
+        <header className="border-b bg-card">
+          <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">💎</span>
+              <h1 className="text-xl font-bold">WealthFolio</h1>
+            </div>
+            <div className="flex items-center gap-2">
+              <ModeToggle />
+              <div className="relative">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowSettings(!showSettings)}
+                >
+                  <Settings className="h-5 w-5" />
+                </Button>
+
+                {showSettings && (
+                  <Card className="absolute right-0 top-full mt-2 w-56 z-50">
+                    <CardContent className="p-2 grid gap-1">
+                      <Button variant="ghost" className="justify-start w-full" onClick={loadDemoData}>
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        加载演示数据
+                      </Button>
+                      <Button variant="ghost" className="justify-start w-full" onClick={takeSnapshot}>
+                        <Download className="mr-2 h-4 w-4" />
+                        记录快照
+                      </Button>
+                      <Button variant="ghost" className="justify-start w-full text-destructive hover:text-destructive" onClick={handleClearData}>
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        清除所有数据
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
             </div>
           </div>
-        )}
-      </header>
+        </header>
 
-      <main className="app-main">
-        <section className="summary-section">
-          <div className="summary-cards grid grid-3">
-            <div className="card summary-card net-worth-card">
-              <div className="card-header">
-                <span className="card-title">
-                  <span>💰</span> 净资产
-                </span>
-              </div>
-              <div className={`stat-value ${netWorth >= 0 ? 'positive' : 'negative'}`}>
-                {formatCompactCurrency(netWorth)}
-              </div>
-              <div className="summary-bar">
-                <div className="bar-track">
-                  <div 
-                    className="bar-fill assets"
+        <main className="container mx-auto px-4 py-8 space-y-8">
+          <section className="grid gap-6 md:grid-cols-3">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">净资产</CardTitle>
+                <span className="text-2xl">💰</span>
+              </CardHeader>
+              <CardContent>
+                <div className={`text-2xl font-bold ${netWorth >= 0 ? 'text-green-600 dark:text-green-500' : 'text-red-600 dark:text-red-500'}`}>
+                  {formatCompactCurrency(netWorth)}
+                </div>
+                <div className="mt-4 h-2 w-full bg-secondary rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-green-500"
                     style={{ width: `${assetRatio}%` }}
                   />
                 </div>
-                <div className="bar-labels">
-                  <span className="text-success">资产 {assetRatio.toFixed(0)}%</span>
-                  <span className="text-danger">负债 {(100 - assetRatio).toFixed(0)}%</span>
+                <div className="mt-2 flex justify-between text-xs text-muted-foreground">
+                  <span>资产 {assetRatio.toFixed(0)}%</span>
+                  <span>负债 {(100 - assetRatio).toFixed(0)}%</span>
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
 
-            <div className="card summary-card">
-              <div className="card-header">
-                <span className="card-title">
-                  <span>📈</span> 总资产
-                </span>
-                <button 
-                  className="btn btn-primary btn-sm"
-                  onClick={() => setModalType('asset')}
-                >
-                  + 添加
-                </button>
-              </div>
-              <div className="stat-value positive">
-                {formatCompactCurrency(totalAssets)}
-              </div>
-              <div className="summary-detail text-muted text-sm">
-                {state.assets.length} 个账户
-              </div>
-            </div>
-
-            <div className="card summary-card">
-              <div className="card-header">
-                <span className="card-title">
-                  <span>📉</span> 总负债
-                </span>
-                <button 
-                  className="btn btn-danger btn-sm"
-                  onClick={() => setModalType('liability')}
-                >
-                  + 添加
-                </button>
-              </div>
-              <div className="stat-value negative">
-                {formatCompactCurrency(totalLiabilities)}
-              </div>
-              <div className="summary-detail text-muted text-sm">
-                {state.liabilities.length} 个账户
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <nav className="view-nav">
-          <div className="tab-list">
-            <button 
-              className={`tab ${activeView === 'dashboard' ? 'active' : ''}`}
-              onClick={() => setActiveView('dashboard')}
-            >
-              📊 资产概览
-            </button>
-            <button 
-              className={`tab ${activeView === 'accounts' ? 'active' : ''}`}
-              onClick={() => setActiveView('accounts')}
-            >
-              📋 账户明细
-            </button>
-          </div>
-        </nav>
-
-        {activeView === 'dashboard' ? (
-          <section className="dashboard-section">
-            <div className="dashboard-grid">
-              <div className="card chart-card">
-                <div className="card-header">
-                  <span className="card-title">📊 资产配置</span>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">总资产</CardTitle>
+                <Button size="sm" variant="outline" className="h-8" onClick={() => setModalType('asset')}>
+                  <Plus className="mr-2 h-4 w-4" /> 添加
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-green-600 dark:text-green-500">
+                  {formatCompactCurrency(totalAssets)}
                 </div>
-                <AllocationChart 
-                  assets={state.assets}
-                  liabilities={state.liabilities}
-                  type="asset"
-                />
-              </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {state.assets.length} 个账户
+                </p>
+              </CardContent>
+            </Card>
 
-              <div className="card chart-card">
-                <div className="card-header">
-                  <span className="card-title">📉 负债构成</span>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">总负债</CardTitle>
+                <Button size="sm" variant="outline" className="h-8" onClick={() => setModalType('liability')}>
+                  <Plus className="mr-2 h-4 w-4" /> 添加
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-red-600 dark:text-red-500">
+                  {formatCompactCurrency(totalLiabilities)}
                 </div>
-                <AllocationChart 
-                  assets={state.assets}
-                  liabilities={state.liabilities}
-                  type="liability"
-                />
-              </div>
-
-              <div className="card chart-card full-width">
-                <div className="card-header">
-                  <span className="card-title">📈 资产趋势</span>
-                  <button 
-                    className="btn btn-secondary btn-sm"
-                    onClick={takeSnapshot}
-                  >
-                    📸 记录快照
-                  </button>
-                </div>
-                <TrendChart snapshots={state.snapshots} />
-              </div>
-            </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {state.liabilities.length} 个账户
+                </p>
+              </CardContent>
+            </Card>
           </section>
-        ) : (
-          <section className="accounts-section">
-            <div className="card">
-              <AccountList
-                assets={state.assets}
-                liabilities={state.liabilities}
-                onEditAsset={handleEditAsset}
-                onEditLiability={handleEditLiability}
-                onDeleteAsset={deleteAsset}
-                onDeleteLiability={deleteLiability}
-              />
-            </div>
-          </section>
+
+          <Tabs defaultValue="dashboard" className="space-y-6">
+            <TabsList>
+              <TabsTrigger value="dashboard">资产概览</TabsTrigger>
+              <TabsTrigger value="accounts">账户明细</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="dashboard" className="space-y-6">
+              <div className="grid gap-6 md:grid-cols-2">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>资产配置</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <AllocationChart
+                      assets={state.assets}
+                      liabilities={state.liabilities}
+                      type="asset"
+                    />
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>负债构成</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <AllocationChart
+                      assets={state.assets}
+                      liabilities={state.liabilities}
+                      type="liability"
+                    />
+                  </CardContent>
+                </Card>
+
+                <Card className="md:col-span-2">
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <div>
+                      <CardTitle>资产趋势</CardTitle>
+                      <CardDescription>净资产随时间的变化趋势</CardDescription>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={takeSnapshot}>
+                      <Download className="mr-2 h-4 w-4" /> 记录快照
+                    </Button>
+                  </CardHeader>
+                  <CardContent>
+                    <TrendChart snapshots={state.snapshots} />
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="accounts">
+              <Card>
+                <CardContent className="p-0">
+                  <AccountList
+                    assets={state.assets}
+                    liabilities={state.liabilities}
+                    onEditAsset={handleEditAsset}
+                    onEditLiability={handleEditLiability}
+                    onDeleteAsset={deleteAsset}
+                    onDeleteLiability={deleteLiability}
+                  />
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </main>
+
+        <footer className="border-t py-8 mt-auto">
+          <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
+            <p>家庭资产管理 · 记录财富 · 规划未来</p>
+          </div>
+        </footer>
+
+        {modalType && (
+          <AccountForm
+            type={modalType}
+            editingAsset={editingAsset}
+            editingLiability={editingLiability}
+            onSubmitAsset={addAsset}
+            onSubmitLiability={addLiability}
+            onUpdateAsset={updateAsset}
+            onUpdateLiability={updateLiability}
+            onClose={closeModal}
+          />
         )}
-      </main>
-
-      <footer className="app-footer">
-        <p>
-          家庭资产管理 · 记录财富 · 规划未来
-        </p>
-      </footer>
-
-      {modalType && (
-        <AccountForm
-          type={modalType}
-          editingAsset={editingAsset}
-          editingLiability={editingLiability}
-          onSubmitAsset={addAsset}
-          onSubmitLiability={addLiability}
-          onUpdateAsset={updateAsset}
-          onUpdateLiability={updateLiability}
-          onClose={closeModal}
-        />
-      )}
-    </div>
+      </div>
+    </ThemeProvider>
   );
 }
 

@@ -7,7 +7,6 @@ import {
 } from 'chart.js';
 import { ASSET_CATEGORIES, LIABILITY_CATEGORIES } from '../types';
 import type { AssetAccount, LiabilityAccount } from '../types';
-import './Charts.css';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -20,7 +19,7 @@ interface AllocationChartProps {
 export const AllocationChart = ({ assets, liabilities, type }: AllocationChartProps) => {
   const items = type === 'asset' ? assets : liabilities;
   const categories = type === 'asset' ? ASSET_CATEGORIES : LIABILITY_CATEGORIES;
-  
+
   const categoryTotals = categories.map(cat => ({
     ...cat,
     total: items
@@ -30,8 +29,8 @@ export const AllocationChart = ({ assets, liabilities, type }: AllocationChartPr
 
   if (categoryTotals.length === 0) {
     return (
-      <div className="chart-empty">
-        <span className="chart-empty-icon">{type === 'asset' ? '📊' : '📉'}</span>
+      <div className="flex flex-col items-center justify-center p-8 text-muted-foreground h-[300px]">
+        <span className="text-4xl mb-2">{type === 'asset' ? '📊' : '📉'}</span>
         <p>暂无{type === 'asset' ? '资产' : '负债'}数据</p>
       </div>
     );
@@ -42,28 +41,26 @@ export const AllocationChart = ({ assets, liabilities, type }: AllocationChartPr
     datasets: [{
       data: categoryTotals.map(c => c.total),
       backgroundColor: categoryTotals.map(c => c.color),
-      borderColor: 'rgba(15, 15, 20, 0.8)',
-      borderWidth: 3,
-      hoverBorderWidth: 0,
-      hoverOffset: 8,
+      borderColor: 'rgba(255, 255, 255, 0.8)', // Need to check dark mode
+      borderWidth: 2,
+      hoverOffset: 4,
     }],
   };
 
   const options = {
     responsive: true,
     maintainAspectRatio: false,
-    cutout: '65%',
+    cutout: '70%',
     plugins: {
       legend: {
         display: false,
       },
       tooltip: {
-        backgroundColor: 'rgba(30, 30, 40, 0.95)',
-        titleColor: '#f0f0f5',
-        bodyColor: '#9999aa',
-        borderColor: 'rgba(255, 255, 255, 0.1)',
+        backgroundColor: 'hsl(var(--popover))',
+        titleColor: 'hsl(var(--popover-foreground))',
+        bodyColor: 'hsl(var(--popover-foreground))',
+        borderColor: 'hsl(var(--border))',
         borderWidth: 1,
-        cornerRadius: 8,
         padding: 12,
         callbacks: {
           label: (context: { parsed: number; dataset: { data: number[] } }) => {
@@ -77,23 +74,23 @@ export const AllocationChart = ({ assets, liabilities, type }: AllocationChartPr
   };
 
   return (
-    <div className="allocation-chart">
-      <div className="chart-container">
+    <div className="flex flex-col md:flex-row items-center gap-8 min-h-[300px]">
+      <div className="relative w-[200px] h-[200px] mx-auto">
         <Doughnut data={data} options={options} />
-        <div className="chart-center">
-          <span className="chart-center-label">{type === 'asset' ? '资产' : '负债'}</span>
-          <span className="chart-center-value">
+        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+          <span className="text-sm text-muted-foreground">{type === 'asset' ? '资产' : '负债'}</span>
+          <span className="text-xl font-bold">
             {categoryTotals.length}类
           </span>
         </div>
       </div>
-      <div className="chart-legend">
+      <div className="flex-1 grid grid-cols-2 gap-4 text-sm w-full">
         {categoryTotals.map(cat => (
-          <div key={cat.key} className="legend-item">
-            <span className="legend-dot" style={{ background: cat.color }} />
-            <span className="legend-icon">{cat.icon}</span>
-            <span className="legend-label">{cat.label}</span>
-            <span className="legend-value">¥{cat.total.toLocaleString()}</span>
+          <div key={cat.key} className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full" style={{ background: cat.color }} />
+            <span className="text-lg">{cat.icon}</span>
+            <span className="flex-1 truncate">{cat.label}</span>
+            <span className="font-mono text-muted-foreground">¥{cat.total.toLocaleString()}</span>
           </div>
         ))}
       </div>

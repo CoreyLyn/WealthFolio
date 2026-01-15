@@ -9,7 +9,11 @@ import {
   ASSET_CATEGORIES,
   LIABILITY_CATEGORIES,
 } from '../types';
-import './AccountForm.css';
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
 type FormType = 'asset' | 'liability';
 
@@ -36,7 +40,7 @@ export const AccountForm = ({
 }: AccountFormProps) => {
   const isEditing = !!(editingAsset || editingLiability);
   const [formType, setFormType] = useState<FormType>(type);
-  
+
   const [name, setName] = useState('');
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState<AssetCategory | LiabilityCategory>(
@@ -73,7 +77,7 @@ export const AccountForm = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const amountNum = parseFloat(amount);
     if (!name.trim() || isNaN(amountNum) || amountNum <= 0) {
       return;
@@ -117,50 +121,57 @@ export const AccountForm = ({
   const categories = formType === 'asset' ? ASSET_CATEGORIES : LIABILITY_CATEGORIES;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal account-form-modal" onClick={e => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2 className="modal-title">
+    <Dialog open={true} onOpenChange={(open: boolean) => !open && onClose()}>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle>
             {isEditing ? '编辑' : '添加'}{formType === 'asset' ? '资产' : '负债'}
-          </h2>
-          <button className="modal-close" onClick={onClose}>×</button>
-        </div>
+          </DialogTitle>
+          <DialogDescription>
+            {isEditing ? '修改账户信息' : '添加一个新的资产或负债账户'}
+          </DialogDescription>
+        </DialogHeader>
 
         {!isEditing && (
-          <div className="form-type-toggle">
-            <button
-              className={`toggle-btn ${formType === 'asset' ? 'active' : ''}`}
+          <div className="flex p-1 bg-muted rounded-lg mb-4">
+            <Button
+              variant={formType === 'asset' ? 'default' : 'ghost'}
+              className="flex-1 rounded-md"
               onClick={() => handleTypeChange('asset')}
+              size="sm"
             >
               💰 资产
-            </button>
-            <button
-              className={`toggle-btn liability ${formType === 'liability' ? 'active' : ''}`}
+            </Button>
+            <Button
+              variant={formType === 'liability' ? 'destructive' : 'ghost'}
+              className={`flex-1 rounded-md ${formType === 'liability' ? 'bg-red-600 hover:bg-red-700 text-white' : ''}`}
               onClick={() => handleTypeChange('liability')}
+              size="sm"
             >
               💳 负债
-            </button>
+            </Button>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="account-form">
-          <div className="form-group">
-            <label className="form-label">名称 *</label>
-            <input
-              type="text"
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid gap-2">
+            <Label htmlFor="name">名称 *</Label>
+            <Input
+              id="name"
               value={name}
-              onChange={e => setName(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
               placeholder={formType === 'asset' ? '如：招商银行储蓄卡' : '如：房贷'}
               required
             />
           </div>
 
-          <div className="form-group">
-            <label className="form-label">金额 (元) *</label>
-            <input
+          <div className="grid gap-2">
+            <Label htmlFor="amount">金额 (元) *</Label>
+            <Input
+              id="amount"
               type="number"
               value={amount}
-              onChange={e => setAmount(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAmount(e.target.value)}
               placeholder="0.00"
               min="0"
               step="0.01"
@@ -168,46 +179,47 @@ export const AccountForm = ({
             />
           </div>
 
-          <div className="form-group">
-            <label className="form-label">类别 *</label>
-            <div className="category-grid">
+          <div className="grid gap-2">
+            <Label>类别 *</Label>
+            <div className="grid grid-cols-3 gap-2">
               {categories.map(cat => (
                 <button
                   key={cat.key}
                   type="button"
-                  className={`category-option ${category === cat.key ? 'active' : ''}`}
+                  className={`flex flex-col items-center justify-center p-2 rounded-lg border text-sm transition-all
+                    ${category === cat.key
+                      ? `border-primary bg-primary/10 text-primary ring-2 ring-primary ring-offset-2`
+                      : 'border-input hover:bg-accent hover:text-accent-foreground'
+                    }`}
                   onClick={() => setCategory(cat.key)}
-                  style={{ 
-                    '--cat-color': cat.color,
-                    '--cat-bg': `${cat.color}20`,
-                  } as React.CSSProperties}
                 >
-                  <span className="category-icon">{cat.icon}</span>
-                  <span className="category-label">{cat.label}</span>
+                  <span className="text-xl mb-1">{cat.icon}</span>
+                  <span>{cat.label}</span>
                 </button>
               ))}
             </div>
           </div>
 
           {formType === 'asset' && (
-            <div className="form-group">
-              <label className="form-label">平台/银行</label>
-              <input
-                type="text"
+            <div className="grid gap-2">
+              <Label htmlFor="platform">平台/银行</Label>
+              <Input
+                id="platform"
                 value={platform}
-                onChange={e => setPlatform(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPlatform(e.target.value)}
                 placeholder="如：招商银行、支付宝"
               />
             </div>
           )}
 
           {formType === 'liability' && (
-            <div className="form-group">
-              <label className="form-label">年利率 (%)</label>
-              <input
+            <div className="grid gap-2">
+              <Label htmlFor="interestRate">年利率 (%)</Label>
+              <Input
+                id="interestRate"
                 type="number"
                 value={interestRate}
-                onChange={e => setInterestRate(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInterestRate(e.target.value)}
                 placeholder="如：4.2"
                 min="0"
                 max="100"
@@ -216,26 +228,27 @@ export const AccountForm = ({
             </div>
           )}
 
-          <div className="form-group">
-            <label className="form-label">备注</label>
-            <textarea
+          <div className="grid gap-2">
+            <Label htmlFor="note">备注</Label>
+            <Textarea
+              id="note"
               value={note}
-              onChange={e => setNote(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setNote(e.target.value)}
               placeholder="可选备注信息..."
               rows={2}
             />
           </div>
 
-          <div className="form-actions">
-            <button type="button" className="btn btn-secondary" onClick={onClose}>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose}>
               取消
-            </button>
-            <button type="submit" className="btn btn-primary">
+            </Button>
+            <Button type="submit">
               {isEditing ? '保存修改' : '确认添加'}
-            </button>
-          </div>
+            </Button>
+          </DialogFooter>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };

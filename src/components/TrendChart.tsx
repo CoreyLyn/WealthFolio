@@ -11,7 +11,6 @@ import {
 } from 'chart.js';
 import { formatCompactCurrency } from '../types';
 import type { Snapshot } from '../types';
-import './Charts.css';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Filler);
 
@@ -22,15 +21,15 @@ interface TrendChartProps {
 export const TrendChart = ({ snapshots }: TrendChartProps) => {
   if (snapshots.length < 2) {
     return (
-      <div className="chart-empty">
-        <span className="chart-empty-icon">📈</span>
-        <p>需要至少2个快照数据</p>
-        <span className="text-sm text-muted">点击"记录快照"保存当前资产状态</span>
+      <div className="flex flex-col items-center justify-center p-12 text-muted-foreground bg-muted/20 rounded-lg min-h-[300px]">
+        <span className="text-4xl mb-2">📈</span>
+        <p className="font-medium">需要至少2个快照数据</p>
+        <span className="text-sm mt-1">点击"记录快照"保存当前资产状态</span>
       </div>
     );
   }
 
-  const sortedSnapshots = [...snapshots].sort((a, b) => 
+  const sortedSnapshots = [...snapshots].sort((a, b) =>
     new Date(a.date).getTime() - new Date(b.date).getTime()
   );
 
@@ -51,7 +50,7 @@ export const TrendChart = ({ snapshots }: TrendChartProps) => {
         tension: 0.4,
         pointRadius: 4,
         pointBackgroundColor: '#8b5cf6',
-        pointBorderColor: '#0f0f14',
+        pointBorderColor: '#ffffff',
         pointBorderWidth: 2,
         pointHoverRadius: 6,
       },
@@ -63,7 +62,7 @@ export const TrendChart = ({ snapshots }: TrendChartProps) => {
         tension: 0.4,
         pointRadius: 3,
         pointBackgroundColor: '#10b981',
-        pointBorderColor: '#0f0f14',
+        pointBorderColor: '#ffffff',
         pointBorderWidth: 2,
         borderDash: [5, 5],
       },
@@ -75,7 +74,7 @@ export const TrendChart = ({ snapshots }: TrendChartProps) => {
         tension: 0.4,
         pointRadius: 3,
         pointBackgroundColor: '#ef4444',
-        pointBorderColor: '#0f0f14',
+        pointBorderColor: '#ffffff',
         pointBorderWidth: 2,
         borderDash: [5, 5],
       },
@@ -92,18 +91,20 @@ export const TrendChart = ({ snapshots }: TrendChartProps) => {
     scales: {
       x: {
         grid: {
-          color: 'rgba(255, 255, 255, 0.05)',
+          color: 'hsl(var(--border))',
+          drawBorder: false,
         },
         ticks: {
-          color: '#666677',
+          color: 'hsl(var(--muted-foreground))',
         },
       },
       y: {
         grid: {
-          color: 'rgba(255, 255, 255, 0.05)',
+          color: 'hsl(var(--border))',
+          drawBorder: false,
         },
         ticks: {
-          color: '#666677',
+          color: 'hsl(var(--muted-foreground))',
           callback: (value: number | string) => formatCompactCurrency(Number(value)),
         },
       },
@@ -113,12 +114,11 @@ export const TrendChart = ({ snapshots }: TrendChartProps) => {
         display: false,
       },
       tooltip: {
-        backgroundColor: 'rgba(30, 30, 40, 0.95)',
-        titleColor: '#f0f0f5',
-        bodyColor: '#9999aa',
-        borderColor: 'rgba(255, 255, 255, 0.1)',
+        backgroundColor: 'hsl(var(--popover))',
+        titleColor: 'hsl(var(--popover-foreground))',
+        bodyColor: 'hsl(var(--popover-foreground))',
+        borderColor: 'hsl(var(--border))',
         borderWidth: 1,
-        cornerRadius: 8,
         padding: 12,
         callbacks: {
           label: (context: TooltipItem<'line'>) => {
@@ -132,22 +132,22 @@ export const TrendChart = ({ snapshots }: TrendChartProps) => {
   };
 
   return (
-    <div className="trend-chart">
-      <div className="trend-legend">
-        <div className="trend-legend-item">
-          <span className="trend-dot" style={{ background: '#8b5cf6' }} />
+    <div className="space-y-4">
+      <div className="flex items-center gap-6 justify-center text-sm">
+        <div className="flex items-center gap-2">
+          <span className="w-3 h-3 rounded-full bg-violet-500" />
           <span>净资产</span>
         </div>
-        <div className="trend-legend-item">
-          <span className="trend-dot trend-dot-dashed" style={{ background: '#10b981' }} />
+        <div className="flex items-center gap-2">
+          <span className="w-3 h-3 rounded-full bg-emerald-500" />
           <span>总资产</span>
         </div>
-        <div className="trend-legend-item">
-          <span className="trend-dot trend-dot-dashed" style={{ background: '#ef4444' }} />
+        <div className="flex items-center gap-2">
+          <span className="w-3 h-3 rounded-full bg-red-500" />
           <span>总负债</span>
         </div>
       </div>
-      <div className="trend-chart-container">
+      <div className="h-[300px] w-full">
         <Line data={data} options={options} />
       </div>
     </div>
