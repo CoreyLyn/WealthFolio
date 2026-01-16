@@ -7,18 +7,22 @@ import { TrendChart } from './components/TrendChart';
 import { AccountList } from './components/AccountList';
 import { AccountForm } from './components/AccountForm';
 import { AuthForm } from './components/AuthForm';
+import { FamilyManagement } from './components/FamilyManagement';
+import { InvitationList } from './components/InvitationList';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Download, Plus, RefreshCw, Settings, Trash2, LogOut, Loader2 } from 'lucide-react';
+import { Download, Plus, RefreshCw, Settings, Trash2, LogOut, Loader2, Users } from 'lucide-react';
 import { ThemeProvider } from "@/components/theme-provider"
 import { ModeToggle } from "@/components/mode-toggle"
 import { AuthProvider, useAuth } from "@/contexts/AuthContext"
+import { FamilyProvider, useFamily } from "@/contexts/FamilyContext"
 
 type ModalType = 'asset' | 'liability' | null;
 
 function AppContent() {
   const { user, signOut, loading: authLoading } = useAuth();
+  const { currentFamily, pendingInvitations } = useFamily();
   const {
     state,
     loading: dataLoading,
@@ -34,12 +38,13 @@ function AppContent() {
     takeSnapshot,
     clearAllData,
     loadDemoData,
-  } = useAppState();
+  } = useAppState({ familyId: currentFamily?.id });
 
   const [modalType, setModalType] = useState<ModalType>(null);
   const [editingAsset, setEditingAsset] = useState<AssetAccount | null>(null);
   const [editingLiability, setEditingLiability] = useState<LiabilityAccount | null>(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [showFamily, setShowFamily] = useState(false);
 
   const handleEditAsset = (asset: AssetAccount) => {
     setEditingAsset(asset);
@@ -102,6 +107,21 @@ function AppContent() {
               <Button
                 variant="ghost"
                 size="icon"
+                onClick={() => setShowFamily(!showFamily)}
+                className="relative"
+              >
+                <Users className="h-5 w-5" />
+                {pendingInvitations.length > 0 && (
+                  <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-destructive text-[10px] font-medium text-destructive-foreground flex items-center justify-center">
+                    {pendingInvitations.length}
+                  </span>
+                )}
+              </Button>
+            </div>
+            <div className="relative">
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => setShowSettings(!showSettings)}
               >
                 <Settings className="h-5 w-5" />
@@ -134,6 +154,17 @@ function AppContent() {
           </div>
         </div>
       </header>
+
+      {showFamily && (
+        <div className="border-b bg-card/50">
+          <div className="container mx-auto px-4 py-6">
+            <div className="grid gap-6 md:grid-cols-2">
+              <FamilyManagement />
+              <InvitationList />
+            </div>
+          </div>
+        </div>
+      )}
 
       <main className="container mx-auto px-4 py-8 space-y-8">
         {dataLoading ? (
@@ -296,7 +327,9 @@ function App() {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <AuthProvider>
-        <AppContent />
+        <FamilyProvider>
+          <AppContent />
+        </FamilyProvider>
       </AuthProvider>
     </ThemeProvider>
   );

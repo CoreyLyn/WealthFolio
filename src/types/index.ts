@@ -130,3 +130,38 @@ export const formatCompactCurrency = (amount: number): string => {
 export const generateId = (): string => {
   return Date.now().toString(36) + Math.random().toString(36).substr(2);
 };
+
+export type FamilyRole = 'owner' | 'admin' | 'member';
+export type InvitationStatus = 'pending' | 'accepted' | 'rejected' | 'expired';
+
+export interface Family {
+  id: string;
+  name: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FamilyMember {
+  id: string;
+  familyId: string;
+  userId: string;
+  email?: string;
+  role: FamilyRole;
+  joinedAt: string;
+}
+
+export interface FamilyInvitation {
+  id: string;
+  familyId: string;
+  familyName?: string;
+  inviterId: string;
+  inviterEmail?: string;
+  inviteeEmail: string;
+  inviteeId?: string;
+  status: InvitationStatus;
+  role: FamilyRole;
+  createdAt: string;
+  expiresAt: string;
+  respondedAt?: string;
+}

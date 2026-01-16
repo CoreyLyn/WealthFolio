@@ -4,13 +4,18 @@ import { generateId } from '../types'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 
+interface UseAppStateOptions {
+  familyId?: string | null
+}
+
 const initialState: AppState = {
   assets: [],
   liabilities: [],
   snapshots: [],
 }
 
-export const useAppState = () => {
+export const useAppState = (options: UseAppStateOptions = {}) => {
+  const { familyId } = options
   const { user } = useAuth()
   const [state, setState] = useState<AppState>(initialState)
   const [loading, setLoading] = useState(true)
@@ -24,10 +29,25 @@ export const useAppState = () => {
 
     const fetchData = async () => {
       setLoading(true)
+      
+      let assetsQuery = supabase.from('assets').select('*')
+      let liabilitiesQuery = supabase.from('liabilities').select('*')
+      let snapshotsQuery = supabase.from('snapshots').select('*').order('date', { ascending: true })
+
+      if (familyId) {
+        assetsQuery = assetsQuery.eq('family_id', familyId)
+        liabilitiesQuery = liabilitiesQuery.eq('family_id', familyId)
+        snapshotsQuery = snapshotsQuery.eq('family_id', familyId)
+      } else {
+        assetsQuery = assetsQuery.eq('user_id', user.id).is('family_id', null)
+        liabilitiesQuery = liabilitiesQuery.eq('user_id', user.id).is('family_id', null)
+        snapshotsQuery = snapshotsQuery.eq('user_id', user.id).is('family_id', null)
+      }
+
       const [assetsRes, liabilitiesRes, snapshotsRes] = await Promise.all([
-        supabase.from('assets').select('*').eq('user_id', user.id),
-        supabase.from('liabilities').select('*').eq('user_id', user.id),
-        supabase.from('snapshots').select('*').eq('user_id', user.id).order('date', { ascending: true }),
+        assetsQuery,
+        liabilitiesQuery,
+        snapshotsQuery,
       ])
 
       const assets: AssetAccount[] = (assetsRes.data ?? []).map(a => ({
@@ -71,7 +91,7 @@ export const useAppState = () => {
     }
 
     fetchData()
-  }, [user])
+  }, [user, familyId])
 
   const totalAssets = state.assets.reduce((sum, a) => sum + a.amount, 0)
   const totalLiabilities = state.liabilities.reduce((sum, l) => sum + l.amount, 0)
@@ -86,6 +106,7 @@ export const useAppState = () => {
     const { error } = await supabase.from('assets').insert({
       id: newId,
       user_id: user.id,
+      family_id: familyId ?? null,
       name: asset.name,
       amount: asset.amount,
       category: asset.category,
@@ -149,6 +170,7 @@ export const useAppState = () => {
     const { error } = await supabase.from('liabilities').insert({
       id: newId,
       user_id: user.id,
+      family_id: familyId ?? null,
       name: liability.name,
       amount: liability.amount,
       category: liability.category,
@@ -219,6 +241,7 @@ export const useAppState = () => {
     const { error } = await supabase.from('snapshots').insert({
       id: newId,
       user_id: user.id,
+      family_id: familyId ?? null,
       date: now,
       total_assets: totalAssets,
       total_liabilities: totalLiabilities,
